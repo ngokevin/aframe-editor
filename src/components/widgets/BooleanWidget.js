@@ -1,29 +1,33 @@
 var React = require('react');
 
 export default class BooleanWidget extends React.Component {
-  getInitialState: function() {
-    return {value: this.props.value};
-  },
-  propTypes: {
+  static propTypes = {
     value: React.PropTypes.bool
-  },
-  getDefaultProps: function() {
-    return {
-      value: false
-    };
-  },
-  componentWillReceiveProps: function(newProps) {
+  };
+
+  static defaultProps = {
+    value: false
+  };
+
+  constructor(props) {
+    super(props);
+    this.state = {value: this.props.value};
+  }
+
+  componentWillReceiveProps(newProps) {
     if (newProps.value != this.state.value) {
       this.setState({value: newProps.value});
     }
-  },
-  onChange: function(e) {
+  }
+
+  onChange = e => {
     var value = e.target.checked;
     this.setState({value: value});
     if (this.props.onChange)
       this.props.onChange(this.props.entity, this.props.componentname, this.props.name, value);
-  },
-  render: function() {
+  }
+
+  render() {
     var id = this.props.componentname + '.' + this.props.name;
 
     return (

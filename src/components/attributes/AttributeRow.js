@@ -1,15 +1,15 @@
 var React = require('react');
-var NumberWidget = require('../widgets/NumberWidget');
-var InputWidget = require('../widgets/InputWidget');
-var BooleanWidget = require('../widgets/BooleanWidget');
-var SelectWidget = require('../widgets/SelectWidget');
-var Vec3Widget = require('../widgets/Vec3Widget');
-var ColorWidget = require('../widgets/ColorWidget');
-var TextureWidget = require('../widgets/TextureWidget');
-var handleEntityChange = require('../widgets/Widget');
+import NumberWidget from '../widgets/NumberWidget';
+import InputWidget from '../widgets/InputWidget';
+import BooleanWidget from '../widgets/BooleanWidget';
+import SelectWidget from '../widgets/SelectWidget';
+import Vec3Widget from '../widgets/Vec3Widget';
+import ColorWidget from '../widgets/ColorWidget';
+import TextureWidget from '../widgets/TextureWidget';
+import handleEntityChange from '../widgets/Widget';
 
 export default class AttributeRow extends React.Component {
-  render: function() {
+  render() {
     var componentData = this.props.component;
     var widget;
 

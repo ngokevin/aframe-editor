@@ -1,11 +1,12 @@
 var React = require('react');
-var Component = require('./Component');
-var CommonComponents = require('./CommonComponents');
 var Events = require('../../lib/Events.js');
-var Collapsible = require('../Collapsible');
 
-export default class AddComponent extends React.Component {
-  addComponent: function() {
+import Collapsible from '../Collapsible';
+import Component from './Component';
+import CommonComponents from './CommonComponents';
+
+class AddComponent extends React.Component {
+  addComponent() {
     var entity = this.props.entity;
     var newComponentName = this.refs.select.value;
     function isComponentInstanced(componentName) {
@@ -31,8 +32,9 @@ export default class AddComponent extends React.Component {
     }
 
     entity.setAttribute(newComponentName, '');
-  },
-  render: function() {
+  }
+
+  render() {
     var entity = this.props.entity;
     if (!entity) {
       return <div></div>;
@@ -65,21 +67,21 @@ export default class AddComponent extends React.Component {
       </Collapsible>
     );
   }
-});
-
-var Attributes = React.createClass({
-  render: function() {
-
-    var entity = this.props.entity;
-    var components = entity ? this.props.entity.components : {};
-    return <div className="attributes">
-        <CommonComponents entity={entity}/>
-        <AddComponent entity={entity}/>
-        {
-    	     Object.keys(components).filter(function(key){return ['visible','position','scale','rotation'].indexOf(key)==-1;}).sort().map(function(key) {
-              return <Component entity={entity} key={key} name={key} component={components[key]}/>
-	         })
-        }
-    </div>;
-  }
 }
+
+const Attributes = props => {
+  var entity = props.entity;
+  var components = entity ? props.entity.components : {};
+  return (
+    <div className="attributes">
+      <CommonComponents entity={entity}/>
+      <AddComponent entity={entity}/>
+      {
+         Object.keys(components).filter(function(key){return ['visible','position','scale','rotation'].indexOf(key)==-1;}).sort().map(function(key) {
+            return <Component entity={entity} key={key} name={key} component={components[key]}/>
+         })
+      }
+    </div>
+  );
+};
+export default Attributes;

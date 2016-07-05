@@ -1,11 +1,12 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Menu = require('./menu/Menu');
-var Scenegraph = require('./Scenegraph');
 var Events = require('../lib/Events.js');
 var Editor = require('../lib/editor');
-var ModalTextures = require('./modals/ModalTextures');
-var AttributesSidebar = require('./attributes/AttributesSidebar');
+
+import AttributesSidebar from './attributes/AttributesSidebar';
+import {MenuWidget} from './menu/Menu';
+import ModalTextures from './modals/ModalTextures';
+import Scenegraph from './Scenegraph';
 
 import "../css/main.css";
 import "../css/dark.css";
@@ -24,11 +25,19 @@ function injectCSS(url) {
 injectCSS('https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css');
 injectCSS('https://fonts.googleapis.com/css?family=Roboto:400,300,500');
 
-export default class Main {
-  getInitialState: function() {
-    return {editorEnabled: true, isModalTexturesOpen: false};
-  },
-  toggleEditor: function() {
+export default class Main extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {editorEnabled: true, isModalTexturesOpen: false};
+  }
+
+  componentDidMount() {
+    Events.on('openTexturesModal', function(textureOnClose){
+      this.setState({isModalTexturesOpen: true, textureOnClose: textureOnClose});
+    }.bind(this));
+  }
+
+  toggleEditor = () => {
     this.setState({editorEnabled: !this.state.editorEnabled}, function(){
       if (this.state.editorEnabled)
         editor.enable();
@@ -36,29 +45,28 @@ export default class Main {
         editor.disable();
       //Events.emit('editorModeChanged', this.state.editorEnabled);
     });
-  },
-  onModalTextureOnClose: function(value) {
+  }
+
+  onModalTextureOnClose = value => {
     this.setState({isModalTexturesOpen: false});
     if (this.state.textureOnClose) {
       this.state.textureOnClose(value);
     }
-  },
-  componentDidMount: function() {
-    Events.on('openTexturesModal', function(textureOnClose){
-      this.setState({isModalTexturesOpen: true, textureOnClose: textureOnClose});
-    }.bind(this));
-  },
-  deleteEntity: function() {
+  }
+
+  deleteEntity() {
     if (editor.selectedEntity) {
       editor.selectedEntity.parentNode.removeChild(editor.selectedEntity);
       editor.selectEntity(null);
     }
     return false;
-  },
-  openModal: function() {
+  }
+
+  openModal = () => {
     this.setState({isModalTexturesOpen: true});
-  },
-  render: function() {
+  }
+
+  render() {
     var scene = document.querySelector('a-scene');
     var toggleText = this.state.editorEnabled;
     var textureDialogOpened = this.state.isModalTexturesOpen;
@@ -66,7 +74,7 @@ export default class Main {
       <div>
         <div id="editor" className={this.state.editorEnabled ? '' : 'hidden'}>
           <ModalTextures ref="modaltextures" isOpen={textureDialogOpened} onClose={this.onModalTextureOnClose}/>
-          <Menu/>
+          <MenuWidget/>
           <div id="sidebar-left">
             <div className="tab">SCENEGRAPH</div>
             <Scenegraph scene={scene}/>
