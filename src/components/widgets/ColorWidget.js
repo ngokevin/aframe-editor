@@ -1,6 +1,6 @@
 var React = require('react');
 
-var ColorWidget = React.createClass({
+export default class ColorWidget extends React.Component {
   getInitialState: function() {
     return {value: this.correctValue(this.props.value) || ''};
   },
@@ -29,6 +29,4 @@ var ColorWidget = React.createClass({
   render: function() {
     return <input type='color' className="color" value={this.state.value} onChange={this.onChange}/>;
   }
-});
-
-module.exports = ColorWidget;
+}

@@ -1,6 +1,6 @@
 var React = require('react');
 
-var BooleanWidget = React.createClass({
+export default class BooleanWidget extends React.Component {
   getInitialState: function() {
     return {value: this.props.value};
   },
@@ -25,11 +25,9 @@ var BooleanWidget = React.createClass({
   },
   render: function() {
     var id = this.props.componentname + '.' + this.props.name;
-    
+
     return (
         <input id={id} ref="input" type="checkbox" checked={this.state.value} value={this.state.value} onChange={this.onChange}/>
     );
   }
-});
-
-module.exports = BooleanWidget;
+}

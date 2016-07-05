@@ -1,7 +1,7 @@
 var React = require('react');
 var Pane = require('./Pane');
 
-var Pane = React.createClass({
+export default class Pane extends React.Component {
 	displayName: 'Pane',
   propTypes: {
     label: React.PropTypes.string.isRequired,
@@ -14,6 +14,4 @@ var Pane = React.createClass({
       </div>
     );
   }
-});
-
-module.exports = Pane;
+}

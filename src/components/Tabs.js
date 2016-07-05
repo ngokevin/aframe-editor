@@ -14,7 +14,7 @@ var Pane = require('./Pane');
   </Pane>
 </Tabs>
  */
-var Tabs = React.createClass({
+export default class Tabs extends React.Component {
 	displayName: 'Tabs',
 	propTypes: {
     selected: React.PropTypes.number,
@@ -76,6 +76,4 @@ var Tabs = React.createClass({
       </div>
     );
   }
-});
-
-module.exports = Tabs;
+}

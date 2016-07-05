@@ -6,7 +6,7 @@ function getFilename(url) {
   return url.split('/').pop();
 }
 
-var ModalTextures = React.createClass({
+export default class ModalTextures extends React.Component {
   getInitialState: function() {
     return {
       isOpen: this.props.isOpen,
@@ -248,6 +248,4 @@ var ModalTextures = React.createClass({
       </div>
     </Modal>
   }
-});
-
-module.exports = ModalTextures;
+}

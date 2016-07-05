@@ -2,7 +2,7 @@ var React = require('react');
 var handleEntityChange = require('./Widget');
 var NumberWidget = require('./NumberWidget');
 
-var Vec3Widget = React.createClass({
+export default class Vec3Widget extends React.Component {
   getInitialState: function() {
     return {value: this.props.value};
   },
@@ -24,6 +24,4 @@ var Vec3Widget = React.createClass({
         </div>
     );
   }
-});
-
-module.exports = Vec3Widget;
+}

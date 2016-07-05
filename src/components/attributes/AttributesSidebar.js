@@ -1,7 +1,7 @@
 var React = require('react');
 var AttributesPanel = require('./AttributesPanel');
 
-var AttributesSidebar = React.createClass({
+export default class AttributesSidebar extends React.Component {
   getInitialState: function() {
     return {open: false};
   },
@@ -21,6 +21,4 @@ var AttributesSidebar = React.createClass({
       <AttributesPanel/>
     </div>
   }
-});
-
-module.exports = AttributesSidebar;
+}

@@ -2,7 +2,7 @@ var React = require('react');
 var Events = require('../../lib/Events.js');
 var Attributes = require('./Attributes');
 
-var AttributesPanel = React.createClass({
+export default class AttributesPanel extends React.Component {
   getInitialState: function() {
     return {entity: this.props.entity};
   },
@@ -34,6 +34,4 @@ var AttributesPanel = React.createClass({
   render: function() {
     return (<Attributes entity={this.state.entity}/>)
   }
-});
-
-module.exports = AttributesPanel;
+}

@@ -1,6 +1,6 @@
 var React = require('react');
 
-var InputWidget = React.createClass({
+export default class InputWidget extends React.Component {
   getInitialState: function() {
     return {value: this.props.value || ''};
   },
@@ -18,6 +18,4 @@ var InputWidget = React.createClass({
   render: function() {
     return <input type="text" className="string" value={this.state.value} onChange={this.onChange}/>;
   }
-});
-
-module.exports = InputWidget;
+}

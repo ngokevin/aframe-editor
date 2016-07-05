@@ -24,7 +24,7 @@ function injectCSS(url) {
 injectCSS('https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css');
 injectCSS('https://fonts.googleapis.com/css?family=Roboto:400,300,500');
 
-var Main = React.createClass({
+export default class Main {
   getInitialState: function() {
     return {editorEnabled: true, isModalTexturesOpen: false};
   },
@@ -80,7 +80,7 @@ var Main = React.createClass({
       </div>
     )
   }
-});
+}
 
 function init(){
   var div = document.createElement('div');

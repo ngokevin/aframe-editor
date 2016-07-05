@@ -1,6 +1,6 @@
 var React = require('react');
 
-var Modal = React.createClass({
+export default class Modal extends React.Component {
   getInitialState: function() {
     return {isOpen: this.props.isOpen};
   },
@@ -63,6 +63,4 @@ var Modal = React.createClass({
       </div>
     )
   }
-});
-
-module.exports = Modal;
+}

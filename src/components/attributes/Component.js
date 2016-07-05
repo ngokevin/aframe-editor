@@ -10,7 +10,7 @@ function isSingleProperty (schema) {
    return 'default' in schema;
 }
 
-var Component = React.createClass({
+export default class Component extends React.Component {
   deleteComponent: function(event) {
     event.stopPropagation();
     this.props.entity.removeAttribute(this.props.name);
@@ -60,6 +60,4 @@ var Component = React.createClass({
       </Collapsible>
     );
   }
-});
-
-module.exports = Component;
+}

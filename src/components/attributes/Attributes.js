@@ -4,7 +4,7 @@ var CommonComponents = require('./CommonComponents');
 var Events = require('../../lib/Events.js');
 var Collapsible = require('../Collapsible');
 
-var AddComponent = React.createClass({
+export default class AddComponent extends React.Component {
   addComponent: function() {
     var entity = this.props.entity;
     var newComponentName = this.refs.select.value;
@@ -82,6 +82,4 @@ var Attributes = React.createClass({
         }
     </div>;
   }
-});
-
-module.exports = Attributes;
+}

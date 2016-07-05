@@ -8,7 +8,7 @@ var ColorWidget = require('../widgets/ColorWidget');
 var TextureWidget = require('../widgets/TextureWidget');
 var handleEntityChange = require('../widgets/Widget');
 
-var AttributeRow = React.createClass({
+export default class AttributeRow extends React.Component {
   render: function() {
     var componentData = this.props.component;
     var widget;
@@ -48,6 +48,4 @@ var AttributeRow = React.createClass({
       </div>
     );
   }
-});
-
-module.exports = AttributeRow;
+}

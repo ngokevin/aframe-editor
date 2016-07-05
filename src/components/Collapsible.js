@@ -1,7 +1,7 @@
 var React = require('react');
 var Pane = require('./Pane');
 
-var Collapsible = React.createClass({
+export default class Collapsible extends React.Component {
 	displayName: 'Collapsible',
 	propTypes: {
     children: React.PropTypes.oneOfType([
@@ -41,6 +41,4 @@ var Collapsible = React.createClass({
       </div>
     );
   }
-});
-
-module.exports = Collapsible;
+}

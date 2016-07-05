@@ -54,7 +54,7 @@ function insertOrGetImageAsset(src) {
 
 
 
-var TextureWidget = React.createClass({
+export default class TextureWidget extends React.Component {
   getInitialState: function() {
     return {value: this.props.value || ''};
   },/*
@@ -176,6 +176,4 @@ var TextureWidget = React.createClass({
       </span>
     );
   }
-});
-
-module.exports = TextureWidget;
+}

@@ -3,7 +3,7 @@ var Clipboard = require('clipboard');
 var Exporter = require('../../lib/exporter.js');
 var Events = require('../../lib/Events.js');
 
-var CreateMenu = React.createClass({
+export class CreateMenu extends React.Component {
   getInitialState: function() {
     return {primitivesDefinitions: {
       'Entity': {group: 'entities', element: 'a-entity', components: {}},
@@ -55,10 +55,10 @@ var CreateMenu = React.createClass({
   createEntity: function(e) {
     Events.emit('createNewEntity', this.state.primitivesDefinitions[e.target.value]);
   },
-});
+}
 
 
-var EditMenu = React.createClass({
+export class EditMenu extends React.Component {
   getInitialState: function() {
     return {};
   },
@@ -90,9 +90,9 @@ var EditMenu = React.createClass({
   createEntity: function(e) {
     Events.emit('createNewEntity', this.state.primitivesDefinitions[e.target.value]);
   },
-});
+}
 
-var MenuWidget = React.createClass({
+export class MenuWidget extends React.Component {
   update: function(e) {
     var value = e.target.value;
     this.setState({value: value});
@@ -148,6 +148,4 @@ var MenuWidget = React.createClass({
       </div>
     );
   }
-});
-
-module.exports = MenuWidget;
+}

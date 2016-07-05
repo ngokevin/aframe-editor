@@ -1,7 +1,7 @@
 var React = require('react');
 var Events = require('../lib/Events.js');
 
-var Scenegraph = React.createClass({
+export default class Scenegraph extends React.Component {
   getInitialState: function() {
     return {value: this.props.value || '', options: [], selectedIndex: -1};
   },
@@ -153,6 +153,4 @@ var Scenegraph = React.createClass({
       }
     </div>
   }
-});
-
-module.exports = Scenegraph;
+}

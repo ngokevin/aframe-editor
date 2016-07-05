@@ -1,6 +1,6 @@
 var React = require('react');
 
-var SelectWidget = React.createClass({
+export default class SelectWidget extends React.Component {
   getInitialState: function() {
     return {value: this.props.value || ''};
   },
@@ -26,6 +26,4 @@ var SelectWidget = React.createClass({
       </select>
     );
   }
-});
-
-module.exports = SelectWidget;
+}

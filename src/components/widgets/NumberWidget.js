@@ -1,7 +1,7 @@
 var React = require('react');
 var handleEntityChange = require('./Widget');
 
-var NumberWidget = React.createClass({
+export default class NumberWidget extends React.Component {
   getInitialState: function() {
     return {value: this.props.value, displayValue: this.props.value.toFixed(this.props.precision)};
   },
@@ -114,6 +114,4 @@ var NumberWidget = React.createClass({
         />
         );
   }
-});
-
-module.exports = NumberWidget;
+}

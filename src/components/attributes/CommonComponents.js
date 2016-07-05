@@ -27,7 +27,7 @@ function isSingleProperty (schema) {
   return 'default' in schema;
 }
 
-var MixinsComponent = React.createClass({
+export class MixinsComponent extends React.Component {
   removeMixin: function(mixin) {
     var entity = this.props.entity;
     var newMixins = trim(entity.getAttribute('mixin').replace(mixin, ''));
@@ -104,9 +104,9 @@ var MixinsComponent = React.createClass({
       </div>
     );
   }
-});
+}
 
-var CommonComponents = React.createClass({
+export class CommonComponents extends React.Component {
   render: function() {
     var entity = this.props.entity;
     var components = entity ? this.props.entity.components : {};
@@ -139,6 +139,4 @@ var CommonComponents = React.createClass({
       </Collapsible>
     );
   }
-});
-
-module.exports = CommonComponents;
+}
