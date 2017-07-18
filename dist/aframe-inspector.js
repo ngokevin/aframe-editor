@@ -273,7 +273,7 @@
 	  window.addEventListener('inspector-loaded', function () {
 	    _reactDom2.default.render(_react2.default.createElement(Main, null), div);
 	  });
-	  console.log('A-Frame Inspector Version:', ("0.6.0"), '(' + ("18-07-2017") + ' Commit: ' + ("74b3c7cf166e0bdcb4ae5300574213916d967460\n").substr(0, 7) + ')');
+	  console.log('A-Frame Inspector Version:', ("0.6.0"), '(' + ("18-07-2017") + ' Commit: ' + ("1c7fc12717651516f096045a739e13ea19d9f73d\n").substr(0, 7) + ')');
 	})();
 
 /***/ }),
@@ -28387,6 +28387,9 @@
 
 		this.enabled = true;
 		this.center = new THREE.Vector3();
+		this.panSpeed = 0.001;
+		this.zoomSpeed = 0.001;
+		this.rotationSpeed = 0.005;
 
 		// internals
 
@@ -28394,34 +28397,22 @@
 		var vector = new THREE.Vector3();
 
 		var STATE = { NONE: -1, ROTATE: 0, ZOOM: 1, PAN: 2 };
-		var stateClass = ['state-rotating', 'state-zooming', 'state-dragging'];
 		var state = STATE.NONE;
 
 		var center = this.center;
 		var normalMatrix = new THREE.Matrix3();
 		var pointer = new THREE.Vector2();
 		var pointerOld = new THREE.Vector2();
+		var spherical = new THREE.Spherical();
 
 		// events
 
 		var changeEvent = { type: 'change' };
 
-		this.focus = function (target, frame) {
+		this.focus = function (target) {
 
-			var scale = new THREE.Vector3();
-			target.matrixWorld.decompose(center, new THREE.Quaternion(), scale);
-
-			if (frame && target.geometry) {
-
-				scale = (scale.x + scale.y + scale.z) / 3;
-				center.add(target.geometry.boundingSphere.center.clone().multiplyScalar(scale));
-				var radius = target.geometry.boundingSphere.radius * scale;
-				var pos = object.position.clone().sub(center).normalize().multiplyScalar(radius * 2);
-				object.position.copy(center).add(pos);
-			}
-
-			object.lookAt(center);
-
+			var box = new THREE.Box3().setFromObject(target);
+			object.lookAt(center.copy(box.getCenter()));
 			scope.dispatchEvent(changeEvent);
 		};
 
@@ -28429,7 +28420,7 @@
 
 			var distance = object.position.distanceTo(center);
 
-			delta.multiplyScalar(distance * 0.001);
+			delta.multiplyScalar(distance * scope.panSpeed);
 			delta.applyMatrix3(normalMatrix.getNormalMatrix(object.matrix));
 
 			object.position.add(delta);
@@ -28442,17 +28433,12 @@
 
 			var distance = object.position.distanceTo(center);
 
-			delta.multiplyScalar(distance * 0.001);
+			delta.multiplyScalar(distance * scope.zoomSpeed);
 
 			if (delta.length() > distance) return;
 
 			delta.applyMatrix3(normalMatrix.getNormalMatrix(object.matrix));
-			/*
-	      console.log(object.position);
-	      object.zoom+=delta.z;
-	      console.log(object.zoom,delta);
-	      object.updateProjectionMatrix();
-	  */
+
 			object.position.add(delta);
 
 			scope.dispatchEvent(changeEvent);
@@ -28462,21 +28448,14 @@
 
 			vector.copy(object.position).sub(center);
 
-			var theta = Math.atan2(vector.x, vector.z);
-			var phi = Math.atan2(Math.sqrt(vector.x * vector.x + vector.z * vector.z), vector.y);
+			spherical.setFromVector3(vector);
 
-			theta += delta.x;
-			phi += delta.y;
+			spherical.theta += delta.x;
+			spherical.phi += delta.y;
 
-			var EPS = 0.000001;
+			spherical.makeSafe();
 
-			phi = Math.max(EPS, Math.min(Math.PI - EPS, phi));
-
-			var radius = vector.length();
-
-			vector.x = radius * Math.sin(phi) * Math.sin(theta);
-			vector.y = radius * Math.cos(phi);
-			vector.z = radius * Math.sin(phi) * Math.cos(theta);
+			vector.setFromSpherical(spherical);
 
 			object.position.copy(center).add(vector);
 
@@ -28502,8 +28481,6 @@
 				state = STATE.PAN;
 			}
 
-			domElement.classList.add(stateClass[state]);
-
 			pointerOld.set(event.clientX, event.clientY);
 
 			domElement.addEventListener('mousemove', onMouseMove, false);
@@ -28523,7 +28500,7 @@
 
 			if (state === STATE.ROTATE) {
 
-				scope.rotate(new THREE.Vector3(-movementX * 0.005, -movementY * 0.005, 0));
+				scope.rotate(new THREE.Vector3(-movementX * scope.rotationSpeed, -movementY * scope.rotationSpeed, 0));
 			} else if (state === STATE.ZOOM) {
 
 				scope.zoom(new THREE.Vector3(0, 0, movementY));
@@ -28542,7 +28519,6 @@
 			domElement.removeEventListener('mouseout', onMouseUp, false);
 			domElement.removeEventListener('dblclick', onMouseUp, false);
 
-			domElement.classList.remove(stateClass[state]);
 			state = STATE.NONE;
 		}
 
@@ -28552,21 +28528,7 @@
 
 			// if ( scope.enabled === false ) return;
 
-			var delta = 0;
-
-			if (event.wheelDelta) {
-
-				// WebKit / Opera / Explorer 9
-
-				delta = -event.wheelDelta;
-			} else if (event.detail) {
-
-				// Firefox
-
-				delta = event.detail * 10;
-			}
-
-			scope.zoom(new THREE.Vector3(0, 0, delta));
+			scope.zoom(new THREE.Vector3(0, 0, event.deltaY));
 		}
 
 		function contextmenu(event) {
@@ -28578,8 +28540,7 @@
 
 			domElement.removeEventListener('contextmenu', contextmenu, false);
 			domElement.removeEventListener('mousedown', onMouseDown, false);
-			domElement.removeEventListener('mousewheel', onMouseWheel, false);
-			domElement.removeEventListener('MozMousePixelScroll', onMouseWheel, false); // firefox
+			domElement.removeEventListener('wheel', onMouseWheel, false);
 
 			domElement.removeEventListener('mousemove', onMouseMove, false);
 			domElement.removeEventListener('mouseup', onMouseUp, false);
@@ -28592,8 +28553,7 @@
 
 		domElement.addEventListener('contextmenu', contextmenu, false);
 		domElement.addEventListener('mousedown', onMouseDown, false);
-		domElement.addEventListener('mousewheel', onMouseWheel, false);
-		domElement.addEventListener('MozMousePixelScroll', onMouseWheel, false); // firefox
+		domElement.addEventListener('wheel', onMouseWheel, false);
 
 		// touch
 
@@ -28651,13 +28611,13 @@
 				case 1:
 					touches[0].set(event.touches[0].pageX, event.touches[0].pageY, 0);
 					touches[1].set(event.touches[0].pageX, event.touches[0].pageY, 0);
-					scope.rotate(touches[0].sub(getClosest(touches[0], prevTouches)).multiplyScalar(-0.005));
+					scope.rotate(touches[0].sub(getClosest(touches[0], prevTouches)).multiplyScalar(-scope.rotationSpeed));
 					break;
 
 				case 2:
 					touches[0].set(event.touches[0].pageX, event.touches[0].pageY, 0);
 					touches[1].set(event.touches[1].pageX, event.touches[1].pageY, 0);
-					distance = touches[0].distanceTo(touches[1]);
+					var distance = touches[0].distanceTo(touches[1]);
 					scope.zoom(new THREE.Vector3(0, 0, prevDistance - distance));
 					prevDistance = distance;
 
@@ -34210,18 +34170,22 @@
 	        }),
 	        !state.isReplaying && _react2.default.createElement('a', { className: 'button fa fa-play', title: 'Replay ' + state.selectedRecordingName + ' recording', onClick: this.startReplaying, style: { verticalAlign: 'middle', position: 'relative', top: '5px' } }),
 	        state.isReplaying && _react2.default.createElement('a', { className: 'button fa fa-square', title: 'Stop replaying recording', onClick: this.stopReplaying, style: { verticalAlign: 'middle', position: 'relative', top: '5px' } }),
-	        state.selectedRecordingName && _react2.default.createElement(
+	        _react2.default.createElement(
 	          'div',
 	          { style: { paddingTop: '8px', paddingLeft: '2px' } },
-	          _react2.default.createElement('a', { className: 'button fa fa-save', title: 'Download ' + state.selectedRecordingName + ' recording', onClick: this.downloadRecording, style: { marginLeft: '1px' } }),
-	          _react2.default.createElement('a', { className: 'button fa fa-cloud-upload', title: 'Upload ' + state.selectedRecordingName + ' recording', onClick: this.uploadRecording }),
-	          _react2.default.createElement('a', { className: 'button fa fa-trash', title: 'Delete ' + state.selectedRecordingName + ' recording', onClick: this.deleteRecording }),
 	          _react2.default.createElement(
 	            _reactFileReaderInput2.default,
-	            { as: 'text', onChange: this.addRecordingFromFile, style: { display: 'inline-block' } },
-	            _react2.default.createElement('a', { className: 'button fa fa-upload', title: 'Add recording from file system' })
+	            { as: 'text', onChange: this.addRecordingFromFile, style: { display: 'inline-block', marginLeft: '1px' } },
+	            _react2.default.createElement('a', { className: 'button fa fa-upload', title: 'Add recording from file system', style: { marginLeft: 0 } })
 	          ),
-	          _react2.default.createElement('a', { className: 'button fa fa-link', title: 'Add recording from URL', onClick: this.addRecordingFromURL })
+	          _react2.default.createElement('a', { className: 'button fa fa-link', title: 'Add recording from URL', onClick: this.addRecordingFromURL, style: { marginLeft: '10px', paddingRight: '60px' } }),
+	          state.selectedRecordingName && _react2.default.createElement(
+	            'span',
+	            null,
+	            _react2.default.createElement('a', { className: 'button fa fa-save', title: 'Download ' + state.selectedRecordingName + ' recording', onClick: this.downloadRecording }),
+	            _react2.default.createElement('a', { className: 'button fa fa-cloud-upload', title: 'Upload ' + state.selectedRecordingName + ' recording', onClick: this.uploadRecording }),
+	            _react2.default.createElement('a', { className: 'button fa fa-trash', title: 'Delete ' + state.selectedRecordingName + ' recording', onClick: this.deleteRecording })
+	          )
 	        ),
 	        state.uploadedRecordingURL && _react2.default.createElement(
 	          'a',
