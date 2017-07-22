@@ -140,10 +140,12 @@
 	    };
 
 	    _this.state = {
-	      inspectorEnabled: true,
-	      sceneEl: AFRAME.scenes[0],
 	      entity: null,
+	      inspectorEnabled: true,
+	      isMotionCaptureRecording: false,
 	      isModalTexturesOpen: false,
+	      motionCaptureCountdown: -1,
+	      sceneEl: AFRAME.scenes[0],
 	      visible: {
 	        scenegraph: true,
 	        attributes: true
@@ -194,6 +196,18 @@
 	      Events.on('openhelpmodal', function () {
 	        _this2.setState({ isHelpOpen: true });
 	      });
+
+	      Events.on('motioncapturerecordstart', function () {
+	        _this2.setState({ isMotionCaptureRecording: true });
+	      });
+
+	      Events.on('motioncapturerecordstop', function () {
+	        _this2.setState({ isMotionCaptureRecording: false });
+	      });
+
+	      Events.on('motioncapturecountdown', function (val) {
+	        _this2.setState({ motionCaptureCountdown: val });
+	      });
 	    }
 	    /*
 	      openModal = () => {
@@ -207,11 +221,6 @@
 	      var _this3 = this;
 
 	      var scene = this.state.sceneEl;
-	      var editButton = _react2.default.createElement(
-	        'a',
-	        { className: 'toggle-edit', onClick: this.toggleEdit },
-	        this.state.inspectorEnabled ? 'Back to Scene' : 'Inspect Scene'
-	      );
 	      var showScenegraph = this.state.visible.scenegraph ? null : _react2.default.createElement(
 	        'div',
 	        { className: 'toggle-sidebar left' },
@@ -227,10 +236,23 @@
 	          }, className: 'fa fa-plus', title: 'Show components' })
 	      );
 
+	      var toggleButtonText = 'Inspect Scene';
+	      if (this.state.motionCaptureCountdown !== -1) {
+	        toggleButtonText = this.state.motionCaptureCountdown;
+	      } else if (this.state.isMotionCaptureRecording) {
+	        toggleButtonText = 'Stop Recording';
+	      } else if (this.state.inspectorEnabled) {
+	        toggleButtonText = 'Back to Scene';
+	      }
+
 	      return _react2.default.createElement(
 	        'div',
 	        null,
-	        editButton,
+	        _react2.default.createElement(
+	          'a',
+	          { className: 'toggle-edit', onClick: this.toggleEdit },
+	          toggleButtonText
+	        ),
 	        _react2.default.createElement(
 	          'div',
 	          { id: 'aframe-inspector-panels', className: this.state.inspectorEnabled ? '' : 'hidden' },
@@ -273,7 +295,7 @@
 	  window.addEventListener('inspector-loaded', function () {
 	    _reactDom2.default.render(_react2.default.createElement(Main, null), div);
 	  });
-	  console.log('A-Frame Inspector Version:', ("0.6.0"), '(' + ("18-07-2017") + ' Commit: ' + ("1c7fc12717651516f096045a739e13ea19d9f73d\n").substr(0, 7) + ')');
+	  console.log('A-Frame Inspector Version:', ("0.6.0"), '(' + ("22-07-2017") + ' Commit: ' + ("b98f6174f46de04c0cf35ed872c303dbb0b48264\n").substr(0, 7) + ')');
 	})();
 
 /***/ }),
@@ -26277,14 +26299,6 @@
 	      _this2.addObject(event.target.object3D);
 	    });
 
-	    Events.on('motioncapturerecordstart', function (event) {
-	      _this2.cameraHelper.visible = false;
-	    });
-
-	    Events.on('motioncapturerecordstop', function (event) {
-	      _this2.cameraHelper.visible = true;
-	    });
-
 	    this.scene.add(this.sceneHelpers);
 
 	    this.open();
@@ -33954,8 +33968,6 @@
 
 	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 	var _react = __webpack_require__(2);
@@ -33974,6 +33986,8 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -33984,17 +33998,13 @@
 
 
 	var SCRIPT = 'https://rawgit.com/ngokevin/aframe-motion-capture/mocapinspector/dist/aframe-motion-capture-components.min.js';
-	var LOCALSTORAGE_RECORDINGS = 'avatarRecordings';
+	var LOCALSTORAGE_LOOP = 'aframeinspectormocaploopenabled';
+	var LOCALSTORAGE_SELECTED_RECORDING = 'aframeinspectorselectedrecording';
+	var COUNTDOWN = 5;
 
 	var scriptInjected = false;
 
-	function getRecordings() {
-	  return JSON.parse(localStorage.getItem(LOCALSTORAGE_RECORDINGS)) || {};
-	}
-
-	function getRecording(recordingName) {
-	  return getRecordings()[recordingName];
-	}
+	var sceneEl = AFRAME.scenes[0];
 
 	/**
 	 * Motion capture recording.
@@ -34006,35 +34016,331 @@
 	  function MotionCapture(props) {
 	    _classCallCheck(this, MotionCapture);
 
-	    var sceneEl = AFRAME.scenes[0];
-
 	    var _this = _possibleConstructorReturn(this, (MotionCapture.__proto__ || Object.getPrototypeOf(MotionCapture)).call(this, props));
 
-	    _initialiseProps.call(_this);
+	    _this.buttonPressRecording = function () {
+	      var self = _this;
+
+	      // Resume the scene.
+	      sceneEl.play();
+
+	      // Set original camera back when recording.
+	      var cameraEl = sceneEl.querySelector('[data-aframe-inspector-original-camera]');
+	      cameraEl.setAttribute('camera', 'active', true);
+	      if (cameraEl.getObject3D('replayermesh')) {
+	        cameraEl.getObject3D('replayermesh').visible = false;
+	      }
+
+	      sceneEl.enterVR();
+
+	      sceneEl.addEventListener('buttonup', function buttonStart() {
+	        self.countdownRecording();
+	        sceneEl.removeEventListener('buttonup', buttonStart);
+	      });
+
+	      var counter = 0;
+	      var lastButtonPressId = void 0;
+	      var lastButtonPressTime = void 0;
+	      sceneEl.addEventListener('buttonup', function buttonsStop(evt) {
+	        if (!self.state.isRecording) {
+	          return;
+	        }
+
+	        if (lastButtonPressTime) {
+	          if (lastButtonPressId === evt.detail.id && evt.timeStamp - lastButtonPressTime < 400) {
+	            counter++;
+	            lastButtonPressTime = evt.timeStamp;
+	          } else {
+	            counter = 0;
+	            lastButtonPressTime = undefined;
+	          }
+	        } else {
+	          lastButtonPressId = evt.detail.id;
+	          lastButtonPressTime = evt.timeStamp;
+	        }
+
+	        if (counter === 5) {
+	          self.stopRecording();
+	        }
+
+	        Events.on('motioncapturerecordstop', function () {
+	          sceneEl.removeEventListener('buttonup', buttonsStop);
+	        });
+	      });
+	    };
+
+	    _this.countdownRecording = function () {
+	      var textEntity = document.createElement('a-entity');
+	      textEntity.setAttribute('text', {
+	        align: 'center',
+	        color: 'red',
+	        value: COUNTDOWN.toString()
+	      });
+	      textEntity.setAttribute('scale', '3 3 3');
+	      textEntity.setAttribute('position', '0 0 -1');
+
+	      if (_this.state.isReplaying) {
+	        _this.stopReplaying();
+	      }
+
+	      // Resume the scene.
+	      sceneEl.play();
+
+	      // Set original camera back when recording.
+	      var cameraEl = sceneEl.querySelector('[data-aframe-inspector-original-camera]');
+	      cameraEl.setAttribute('camera', 'active', true);
+	      if (cameraEl.getObject3D('replayermesh')) {
+	        cameraEl.getObject3D('replayermesh').visible = false;
+	      }
+	      cameraEl.appendChild(textEntity);
+
+	      // Enter VR early due to user gesture requirements.
+	      sceneEl.enterVR();
+
+	      // Leave Inspector to remove all of its helpers.
+	      Events.emit('inspectormodechanged', false);
+
+	      // Update countdown both in VR and in Inspector UI.
+	      _this.setState({ countdown: COUNTDOWN.toString() });
+	      Events.emit('motioncapturecountdown', COUNTDOWN);
+	      _this.countdownInterval = setInterval(function () {
+	        if (_this.state.countdown === 0) {
+	          textEntity.parentNode.removeChild(textEntity);
+	          _this.startRecording();
+	          _this.setState({ countdown: -1 });
+	          Events.emit('motioncapturecountdown', -1);
+	          clearInterval(_this.countdownInterval);
+	          return;
+	        }
+	        textEntity.setAttribute('text', {
+	          value: (_this.state.countdown - 1).toString()
+	        });
+	        Events.emit('motioncapturecountdown', _this.state.countdown - 1);
+	        _this.setState({ countdown: _this.state.countdown - 1 });
+	      }, 1000);
+	    };
+
+	    _this.startRecording = function () {
+	      // Get recording name.
+	      var autoName = 'Recording #' + _this.state.recordingNames.length;
+	      if (!_this.state.recordingName) {
+	        _this.setState({ recordingName: autoName });
+	      }
+	      var recordingName = _this.state.recordingName || autoName;
+
+	      // Name the recording.
+	      sceneEl.setAttribute('avatar-recorder', 'recordingName', recordingName);
+
+	      // Start recording!
+	      sceneEl.components['avatar-recorder'].startRecording();
+	      _this.setState({ isRecording: true });
+
+	      Events.emit('motioncapturerecordstart');
+	    };
+
+	    _this.stopRecording = function () {
+	      // Stop recording.
+	      sceneEl.components['avatar-recorder'].stopRecording();
+
+	      // Pause back the scene.
+	      sceneEl.pause();
+
+	      // Restore Inspector camera.
+	      sceneEl.querySelector('[data-aframe-inspector="camera"]').setAttribute('camera', 'active', true);
+
+	      _this.refreshRecordingNames().then(function () {
+	        _this.setState({
+	          isRecording: false,
+	          recordingName: '',
+	          selectedRecordingName: _this.state.recordingName
+	        });
+	      });
+
+	      setTimeout(function () {
+	        _this.startReplaying();
+	      });
+
+	      Events.emit('motioncapturerecordstop');
+	    };
+
+	    _this.renderRecordingOptions = function (option) {
+	      return _react2.default.createElement(
+	        'strong',
+	        { className: 'option' },
+	        option.label
+	      );
+	    };
+
+	    _this.selectRecording = function (value) {
+	      _this.stopReplaying();
+	      _this.setState({ selectedRecordingName: value });
+	      localStorage.setItem(LOCALSTORAGE_SELECTED_RECORDING, value);
+	    };
+
+	    _this.startReplaying = function () {
+	      if (_this.state.isRecording) {
+	        return;
+	      }
+
+	      console.log('[inspector] Replaying recording. Add ' + ('avatar-replayer="recordingName: ' + _this.state.selectedRecordingName + '; loop: true; spectatorMode: true"') + ' to <a-scene> to play automatically without Inspector ' + ('or append to URL ?recording=' + _this.state.selectedRecordingName));
+
+	      // Resume the scene.
+	      sceneEl.play();
+
+	      // Select recording to replay.
+	      sceneEl.setAttribute('avatar-replayer', 'recordingName', _this.state.selectedRecordingName);
+
+	      // Begin replaying.
+	      sceneEl.components['avatar-replayer'].replayRecordingFromSource();
+
+	      var cameraEl = sceneEl.querySelector('[data-aframe-inspector-original-camera]');
+	      cameraEl.getObject3D('replayerMesh').visible = true;
+
+	      _this.setState({ isReplaying: true });
+
+	      // Set so Inspector doesn't pause scene when switching modes.
+	      sceneEl.setAttribute('aframe-inspector-motion-capture-replaying', '');
+	    };
+
+	    _this.stopReplaying = function () {
+	      // Stop replaying.
+	      sceneEl.components['avatar-replayer'].stopReplaying();
+
+	      // Pause back the scene only if Inspector is still open.
+	      // In case we exit the Inspector to view first-person or spectator mode, we don't want to
+	      // pause the scene while we're in those modes.
+	      if (_this.state.inspectorOpened) {
+	        sceneEl.pause();
+	      }
+
+	      _this.setState({ isReplaying: false });
+
+	      sceneEl.removeAttribute('aframe-inspector-motion-capture-replaying');
+	    };
+
+	    _this.deleteRecording = function () {
+	      var self = _this;
+
+	      if (!_this.state.selectedRecordingName) {
+	        return;
+	      }
+
+	      _this.recordingdb.deleteRecording(_this.state.selectedRecordingName);
+	      _this.refreshRecordingNames();
+	    };
+
+	    _this.onChangeRecordingName = function (evt) {
+	      _this.setState({ recordingName: evt.target.value });
+	    };
+
+	    _this.uploadRecording = function () {
+	      var self = _this;
+	      var request = new XMLHttpRequest();
+	      console.log('Uploading recording to gist.github.com.');
+	      request.open('POST', 'https://api.github.com/gists', true);
+	      request.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+	      request.onload = function () {
+	        var data = JSON.parse(this.responseText);
+	        var url = data.files[Object.keys(data.files)[0]].raw_url;
+	        console.log('Recording uploaded to', url);
+	        self.setState({ isCurrentlyUploading: false, uploadedRecordingURL: url });
+	      };
+
+	      _this.recordingdb.getRecording(_this.state.selectedRecordingName).then(function (data) {
+	        request.send(JSON.stringify({
+	          files: _defineProperty({}, _this.state.selectedRecordingName + '.json', {
+	            content: JSON.stringify(data)
+	          })
+	        }));
+	      });
+	      _this.setState({ isCurrentlyUploading: true });
+	    };
+
+	    _this.downloadRecording = function () {
+	      var recordingName = _this.state.selectedRecordingName;
+
+	      _this.recordingdb.getRecording(recordingName).then(function (data) {
+	        // Compose data blob.
+	        var blob = new Blob([JSON.stringify(data)], {
+	          type: 'application/json'
+	        });
+
+	        // Create download link.
+	        var aEl = document.createElement('a');
+	        aEl.href = URL.createObjectURL(blob);
+	        aEl.setAttribute('download', recordingName.toLowerCase().replace(/ /g, '-') + '.json');
+	        aEl.innerHTML = 'Downloading...';
+	        aEl.style.display = 'none';
+
+	        // Click download link.
+	        document.body.appendChild(aEl);
+	        setTimeout(function () {
+	          aEl.click();
+	          document.body.removeChild(aEl);
+	        });
+	      });
+	    };
+
+	    _this.addRecordingFromFile = function (evt, results) {
+	      results.forEach(function (result) {
+	        var _result = _slicedToArray(result, 2),
+	            evt = _result[0],
+	            file = _result[1];
+
+	        _this.recordingdb.addRecording(file.name, JSON.parse(evt.target.result));
+	        _this.refreshRecordingNames().then(function () {
+	          _this.setState({ selectedRecordingName: file.name });
+	        });
+	      });
+	    };
+
+	    _this.addRecordingFromURL = function () {
+	      var self = _this;
+	      var url = prompt('Enter a URL of a recording to fetch');
+	      var recordingName = prompt('Enter a name for the recording to store as');
+	      var xhr = new XMLHttpRequest();
+	      xhr.addEventListener('load', function () {
+	        self.recordingdb.addRecording(recordingName, JSON.parse(this.responseText));
+	        self.refreshRecordingNames().then(function () {
+	          self.setState({ selectedRecordingName: recordingName });
+	        });
+	      });
+	      xhr.open('GET', url);
+	      xhr.send();
+	    };
+
+	    _this.handleRecordingStartKey = function (evt) {
+	      if (evt.key === 'Enter') {
+	        _this.startRecording();
+	      }
+	    };
+
+	    _this.toggleLoop = function () {
+	      _this.setState({ loopEnabled: !_this.state.loopEnabled });
+	      sceneEl.setAttribute('avatar-replayer', 'loop', !_this.state.loopEnabled);
+	      localStorage.setItem(LOCALSTORAGE_LOOP, !_this.state.loopEnabled);
+	    };
+
+	    _this.handleWaitButtonCheckboxChange = function () {
+	      _this.setState({ waitForButtonPress: !_this.state.waitForButtonPress });
+	    };
+
+	    if (localStorage.getItem(LOCALSTORAGE_LOOP) === '') {
+	      localStorage.setItem(LOCALSTORAGE_LOOP, 'true');
+	    }
 
 	    if (!scriptInjected) {
 	      // Inject mocap script.
+	      console.log('[inspector] Injecting <script src="' + SCRIPT + '"></script> for motion capture.');
 	      var script = document.createElement('script');
 	      script.setAttribute('src', SCRIPT);
 	      document.body.appendChild(script);
 	      scriptInjected = true;
 
 	      // Set mocap components once script is loaded.
-	      script.onload = setMocap;
+	      script.onload = _this.onScriptLoad.bind(_this);
 	    } else {
-	      setMocap();
-	    }
-
-	    // Set components.
-	    function setMocap() {
-	      sceneEl.setAttribute('avatar-recorder', {
-	        autoPlay: false,
-	        autoSaveFile: false
-	      });
-	      sceneEl.setAttribute('avatar-replayer', {
-	        autoPlay: false,
-	        cameraOverride: '[data-aframe-inspector-original-camera]'
-	      });
+	      _this.onScriptLoad();
 	    }
 
 	    // Listen for when we've replayed an entire recording through, no loops.
@@ -34042,16 +34348,11 @@
 	      _this.stopReplaying();
 	    });
 
-	    // Default selected recording.
-	    var recordings = getRecordings();
-	    var recordingName = '';
-	    if ((typeof recordings === 'undefined' ? 'undefined' : _typeof(recordings)) === 'object' && Object.keys(recordings).length) {
-	      recordingName = Object.keys(recordings).sort()[0];
-	    }
+	    Events.on('inspectormodechanged', function (isOpen) {
+	      _this.setState({ inspectorOpened: isOpen });
 
-	    Events.on('inspectormodechanged', function (val) {
-	      // Hide the replayer mesh (pink box) if switching to first-person view.
-	      if (!val && _this.state.isReplaying) {
+	      // During replay, hide the replayer mesh (pink box) if switching to first-person view.
+	      if (_this.state.isReplaying && !isOpen) {
 	        var cameraEl = sceneEl.querySelector('[data-aframe-inspector-original-camera]');
 	        if (cameraEl.getObject3D('replayerMesh')) {
 	          cameraEl.getObject3D('replayerMesh').visible = false;
@@ -34059,23 +34360,33 @@
 	        _this.setState({ inspectorOpened: false });
 	      }
 
-	      // Show the replayer mesh (pink box) if switching to Inspector view.
-	      if (val && _this.state.isReplaying) {
+	      // During replay, show the replayer mesh (pink box) if switching to Inspector view.
+	      if (_this.state.isReplaying && isOpen) {
 	        var _cameraEl = sceneEl.querySelector('[data-aframe-inspector-original-camera]');
 	        if (_cameraEl.getObject3D('replayerMesh')) {
 	          _cameraEl.getObject3D('replayerMesh').visible = true;
 	        }
 	        _this.setState({ inspectorOpened: true });
 	      }
+
+	      // Stop recording if we entered back to Inspector during recording.
+	      if (_this.state.isRecording && isOpen) {
+	        _this.stopRecording();
+	      }
 	    });
 
 	    _this.state = {
+	      countdown: -1,
+	      loopEnabled: JSON.parse(localStorage.getItem(LOCALSTORAGE_LOOP)),
 	      inspectorOpened: true,
+	      isCurrentlyUploading: false,
 	      isRecording: false,
 	      isReplaying: false,
 	      recordingName: '', // For saving recording.
-	      selectedRecordingName: recordingName, // For replay.
-	      uploadedRecordingURL: '' // For uploading to myjson.com.
+	      recordingNames: [],
+	      selectedRecordingName: '', // For replay.
+	      uploadedRecordingURL: '', // For uploading to GitHub Gist.
+	      waitForButtonPress: true
 	    };
 	    return _this;
 	  }
@@ -34083,17 +34394,37 @@
 	  _createClass(MotionCapture, [{
 	    key: 'componentWillUnmount',
 	    value: function componentWillUnmount() {
-	      var sceneEl = AFRAME.scenes[0];
 	      // Remove components.
 	      sceneEl.removeAttribute('avatar-recorder');
 	      sceneEl.removeAttribute('avatar-replayer');
 	    }
 	  }, {
+	    key: 'onScriptLoad',
+	    value: function onScriptLoad() {
+	      var _this2 = this;
+
+	      // Set components.
+	      sceneEl.setAttribute('avatar-recorder', {
+	        autoPlay: false
+	      });
+	      sceneEl.setAttribute('avatar-replayer', {
+	        autoPlay: false,
+	        cameraOverride: '[data-aframe-inspector-original-camera]',
+	        loop: JSON.parse(localStorage.getItem(LOCALSTORAGE_LOOP))
+	      });
+	      this.recordingdb = sceneEl.systems.recordingdb;
+	      this.refreshRecordingNames().then(function () {
+	        var selectedRecording = localStorage.getItem(LOCALSTORAGE_SELECTED_RECORDING);
+	        if (selectedRecording && _this2.state.recordingNames.indexOf(selectedRecording)) {
+	          _this2.setState({ selectedRecordingName: selectedRecording });
+	        }
+	      });
+	    }
+	  }, {
 	    key: 'getOptions',
 	    value: function getOptions() {
 	      // Populate options for replaying recordings from localStorage, stored by the components.
-	      var recordingNames = Object.keys(getRecordings());
-	      return recordingNames.sort().map(function (recordingName) {
+	      return this.state.recordingNames.sort().map(function (recordingName) {
 	        return {
 	          value: recordingName,
 	          label: recordingName
@@ -34120,9 +34451,32 @@
 	     * Change recording name input to save as when recording.
 	     */
 
+	  }, {
+	    key: 'refreshRecordingNames',
+	    value: function refreshRecordingNames() {
+	      var _this3 = this;
+
+	      return new Promise(function (resolve) {
+	        _this3.recordingdb.getRecordingNames().then(function (recordingNames) {
+	          var state = { recordingNames: recordingNames };
+
+	          if (!recordingNames || !recordingNames.length) {
+	            // No recordings available, reset.
+	            state.selectedRecordingName = '';
+	          } else if (!_this3.state.selectedRecordingName || recordingNames.indexOf(_this3.state.selectedRecordingName) === -1) {
+	            // Recordings available and either no selected recording or invalid. Set to first.
+	            state.selectedRecordingName = recordingNames[0];
+	          }
+
+	          _this3.setState(state, function () {
+	            resolve(recordingNames);
+	          });
+	        });
+	      });
+	    }
 
 	    /**
-	     * Upload selected recording to myjson.com
+	     * Upload selected recording to GitHub Gist.
 	     */
 
 
@@ -34142,20 +34496,45 @@
 
 	      return _react2.default.createElement(
 	        'div',
-	        { id: 'motionCapture', style: { background: '#2B2B2B', padding: '1px 0 20px 10px' } },
+	        { id: 'motionCapture', style: { background: '#2B2B2B', padding: '1px 0 20px 10px', width: '100%' } },
 	        _react2.default.createElement(
 	          'p',
 	          { style: { marginBottom: 0 } },
 	          'Motion Capture Recording',
 	          _react2.default.createElement('a', { className: 'button fa fa-question-circle', href: 'https://aframe.io/blog/motion-capture/', target: '_blank', ref: 'external' })
 	        ),
+	        _react2.default.createElement(
+	          'p',
+	          { style: { textDecoration: 'underline' } },
+	          'Record'
+	        ),
 	        _react2.default.createElement('input', { id: 'recordingName', placeholder: 'Recording name...',
 	          value: state.recordingName || '', onChange: this.onChangeRecordingName,
 	          onKeyPress: this.handleRecordingStartKey,
 	          title: 'Recording name',
-	          style: { marginTop: '10px', padding: '10px 0 10px 10px', width: '75%' } }),
-	        !state.isRecording && _react2.default.createElement('a', { className: 'button fa fa-circle', title: 'Start recording', onClick: this.startRecording, style: { color: '#EF2D5E', position: 'relative', right: '2px', top: '2px' } }),
-	        state.isRecording && _react2.default.createElement('a', { className: 'button fa fa-square', title: 'Stop recording', onClick: this.stopRecording, style: { color: '#EF2D5E' } }),
+	          style: { padding: '10px 0 10px 10px', width: '75%' } }),
+	        state.countdown !== -1 && _react2.default.createElement(
+	          'span',
+	          { style: { color: '#EF2D5E', position: 'relative', left: '10px', top: '2px' } },
+	          this.state.countdown
+	        ),
+	        !state.isRecording && state.countdown === -1 && _react2.default.createElement('a', { className: 'button fa fa-circle', title: 'Start recording', onClick: state.waitForButtonPress ? this.buttonPressRecording : this.countdownRecording, style: { color: '#EF2D5E', position: 'relative', right: '2px', top: '2px' } }),
+	        state.isRecording && state.countdown === -1 && _react2.default.createElement('a', { className: 'button fa fa-square', title: 'Stop recording', onClick: this.stopRecording, style: { color: '#EF2D5E' } }),
+	        _react2.default.createElement(
+	          'div',
+	          { style: { marginTop: '8px' } },
+	          _react2.default.createElement('input', { id: 'waitForButton', type: 'checkbox', checked: this.state.waitForButtonPress, onChange: this.handleWaitButtonCheckboxChange, style: { marginLeft: 0, marginTop: '2px' } }),
+	          _react2.default.createElement(
+	            'label',
+	            { htmlFor: 'waitForButton', style: { fontSize: '10px', fontStyle: 'italic', display: 'inline-block', verticalAlign: 'top', width: '180px' } },
+	            'Use controller to toggle recording. Click the red circle, then press any button to start recording. Then press any button five times quickly to stop recording.'
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'p',
+	          { style: { textDecoration: 'underline', marginBottom: 0 } },
+	          'Replay'
+	        ),
 	        _react2.default.createElement(_reactSelect2.default, {
 	          className: 'savedRecordings',
 	          options: this.getOptions(),
@@ -34182,14 +34561,15 @@
 	          state.selectedRecordingName && _react2.default.createElement(
 	            'span',
 	            null,
+	            _react2.default.createElement('a', { className: 'button fa fa-repeat', title: 'Toggle loop of replaying', onClick: this.toggleLoop, style: _defineProperty({}, this.state.loopEnabled && 'color', '#FFF') }),
 	            _react2.default.createElement('a', { className: 'button fa fa-save', title: 'Download ' + state.selectedRecordingName + ' recording', onClick: this.downloadRecording }),
-	            _react2.default.createElement('a', { className: 'button fa fa-cloud-upload', title: 'Upload ' + state.selectedRecordingName + ' recording', onClick: this.uploadRecording }),
+	            _react2.default.createElement('a', { className: state.isCurrentlyUploading ? 'button fa fa-hourglass-half' : 'button fa fa-cloud-upload', title: state.isCurrentlyUploading ? 'Uploading ' + state.selectedRecordingName + '...' : 'Upload ' + state.selectedRecordingName + ' recording', onClick: this.uploadRecording, style: _defineProperty({}, state.isCurrentlyUploading && 'color', '#24CAFF') }),
 	            _react2.default.createElement('a', { className: 'button fa fa-trash', title: 'Delete ' + state.selectedRecordingName + ' recording', onClick: this.deleteRecording })
 	          )
 	        ),
 	        state.uploadedRecordingURL && _react2.default.createElement(
 	          'a',
-	          { href: state.uploadedRecordingURL, target: '_blank', ref: 'external', style: { color: '#FAFAFA', display: 'inline-block', marginLeft: '2px', marginTop: '5px' } },
+	          { href: state.uploadedRecordingURL, target: '_blank', ref: 'external', style: { color: '#FAFAFA', display: 'inline-block', marginLeft: '2px', marginTop: '10px', width: '85%', overflow: 'hidden' }, title: state.uploadedRecordingURL },
 	          state.uploadedRecordingURL
 	        )
 	      );
@@ -34198,211 +34578,6 @@
 
 	  return MotionCapture;
 	}(_react2.default.Component);
-
-	var _initialiseProps = function _initialiseProps() {
-	  var _this2 = this;
-
-	  this.startRecording = function () {
-	    var sceneEl = AFRAME.scenes[0];
-
-	    if (_this2.state.isReplaying) {
-	      return;
-	    }
-
-	    // Get recording name.
-	    var autoName = 'Recording #' + Object.keys(getRecordings() || {}).length;
-	    var recordingName = _this2.state.recordingName || autoName;
-
-	    // Need to enter VR first because prompt will take time.
-	    sceneEl.enterVR();
-
-	    // Set original camera back when recording.
-	    var cameraEl = sceneEl.querySelector('[data-aframe-inspector-original-camera]');
-	    cameraEl.setAttribute('camera', 'active', true);
-	    if (cameraEl.getObject3D('replayermesh')) {
-	      cameraEl.getObject3D('replayermesh').visible = false;
-	    }
-
-	    // Name the recording.
-	    sceneEl.setAttribute('avatar-recorder', 'recordingName', recordingName);
-
-	    // Leave Inspector to remove all of its helpers.
-	    Events.emit('inspectormodechanged', false);
-
-	    // Resume the scene.
-	    sceneEl.play();
-
-	    // Start recording!
-	    sceneEl.components['avatar-recorder'].startRecording();
-	    _this2.setState({ isRecording: true });
-	  };
-
-	  this.stopRecording = function () {
-	    var sceneEl = AFRAME.scenes[0];
-
-	    // Stop recording.
-	    sceneEl.components['avatar-recorder'].stopRecording();
-
-	    // Pause back the scene.
-	    sceneEl.pause();
-
-	    // Restore Inspector camera.
-	    sceneEl.querySelector('[data-aframe-inspector="camera"]').setAttribute('camera', 'active', true);
-
-	    _this2.setState({
-	      isRecording: false,
-	      recordingName: '',
-	      selectedRecordingName: _this2.state.recordingName
-	    });
-
-	    setTimeout(function () {
-	      _this2.startReplaying();
-	    });
-	  };
-
-	  this.renderRecordingOptions = function (option) {
-	    return _react2.default.createElement(
-	      'strong',
-	      { className: 'option' },
-	      option.label
-	    );
-	  };
-
-	  this.selectRecording = function (value) {
-	    _this2.setState({ selectedRecordingName: value });
-	  };
-
-	  this.startReplaying = function () {
-	    var sceneEl = AFRAME.scenes[0];
-
-	    if (_this2.state.isRecording) {
-	      return;
-	    }
-
-	    // Resume the scene.
-	    sceneEl.play();
-
-	    // Select recording to replay.
-	    sceneEl.setAttribute('avatar-replayer', 'recordingName', _this2.state.selectedRecordingName);
-
-	    // Begin replaying.
-	    sceneEl.components['avatar-replayer'].replayRecordingFromSource();
-
-	    var cameraEl = sceneEl.querySelector('[data-aframe-inspector-original-camera]');
-	    cameraEl.getObject3D('replayerMesh').visible = true;
-
-	    _this2.setState({ isReplaying: true });
-
-	    // Set so Inspector doesn't pause scene when switching modes.
-	    sceneEl.setAttribute('aframe-inspector-motion-capture-replaying', '');
-	  };
-
-	  this.stopReplaying = function () {
-	    var sceneEl = AFRAME.scenes[0];
-	    // Stop replaying.
-	    sceneEl.components['avatar-replayer'].stopReplaying();
-
-	    // Pause back the scene only if Inspector is still open.
-	    // In case we exit the Inspector to view first-person or spectator mode, we don't want to
-	    // pause the scene while we're in those modes.
-	    if (_this2.state.inspectorOpened) {
-	      sceneEl.pause();
-	    }
-
-	    _this2.setState({ isReplaying: false });
-
-	    sceneEl.removeAttribute('aframe-inspector-motion-capture-replaying');
-	  };
-
-	  this.deleteRecording = function () {
-	    if (!_this2.state.selectedRecordingName) {
-	      return;
-	    }
-	    var recordings = getRecordings();
-	    delete recordings[_this2.state.selectedRecordingName];
-	    localStorage.setItem(LOCALSTORAGE_RECORDINGS, JSON.stringify(recordings));
-	    if (Object.keys(recordings).length) {
-	      _this2.setState({ selectedRecordingName: Object.keys(recordings).sort()[0] });
-	    } else {
-	      _this2.setState({ selectedRecordingName: '' });
-	    }
-	  };
-
-	  this.onChangeRecordingName = function (evt) {
-	    _this2.setState({ recordingName: evt.target.value });
-	  };
-
-	  this.uploadRecording = function () {
-	    var self = _this2;
-	    var request = new XMLHttpRequest();
-	    console.log('Uploading recording to myjson.com.');
-	    request.open('POST', window.location.protocol + '//api.myjson.com/bins', true);
-	    request.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-	    request.onload = function () {
-	      var url = JSON.parse(this.responseText).uri;
-	      console.log('Recording uploaded to', url);
-	      self.setState({ uploadedRecordingURL: url });
-	    };
-	    request.send(JSON.stringify(getRecording(_this2.state.selectedRecordingName)));
-	  };
-
-	  this.downloadRecording = function () {
-	    var recordingName = _this2.state.selectedRecordingName;
-
-	    // Compose data blob.
-	    var blob = new Blob([JSON.stringify(getRecording(recordingName))], {
-	      type: 'application/json'
-	    });
-
-	    // Create download link.
-	    var aEl = document.createElement('a');
-	    aEl.href = URL.createObjectURL(blob);
-	    aEl.setAttribute('download', recordingName.toLowerCase().replace(/ /g, '-') + '.json');
-	    aEl.innerHTML = 'Downloading...';
-	    aEl.style.display = 'none';
-
-	    // Click download link.
-	    document.body.appendChild(aEl);
-	    setTimeout(function () {
-	      aEl.click();
-	      document.body.removeChild(aEl);
-	    });
-	  };
-
-	  this.addRecordingFromFile = function (evt, results) {
-	    results.forEach(function (result) {
-	      var _result = _slicedToArray(result, 2),
-	          evt = _result[0],
-	          file = _result[1];
-
-	      var recordings = getRecordings();
-	      recordings[file.name] = JSON.parse(evt.target.result);
-	      localStorage.setItem(LOCALSTORAGE_RECORDINGS, JSON.stringify(recordings));
-	      _this2.setState({ selectedRecordingName: file.name });
-	    });
-	  };
-
-	  this.addRecordingFromURL = function () {
-	    var self = _this2;
-	    var url = prompt('Enter a URL of a recording to fetch');
-	    var recordingName = prompt('Enter a name for the recording to store as');
-	    var xhr = new XMLHttpRequest();
-	    xhr.addEventListener('load', function () {
-	      var recordings = getRecordings();
-	      recordings[recordingName] = JSON.parse(this.responseText);
-	      localStorage.setItem(LOCALSTORAGE_RECORDINGS, JSON.stringify(recordings));
-	      self.setState({ selectedRecordingName: recordingName });
-	    });
-	    xhr.open('GET', url);
-	    xhr.send();
-	  };
-
-	  this.handleRecordingStartKey = function (evt) {
-	    if (evt.key === 'Enter') {
-	      _this2.startRecording();
-	    }
-	  };
-	};
 
 	exports.default = MotionCapture;
 
