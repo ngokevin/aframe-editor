@@ -295,7 +295,7 @@
 	  window.addEventListener('inspector-loaded', function () {
 	    _reactDom2.default.render(_react2.default.createElement(Main, null), div);
 	  });
-	  console.log('A-Frame Inspector Version:', ("0.6.0"), '(' + ("22-07-2017") + ' Commit: ' + ("4bdd8113b770b0f03c490e5cfb030814c4f558bc\n").substr(0, 7) + ')');
+	  console.log('A-Frame Inspector Version:', ("0.6.0"), '(' + ("22-07-2017") + ' Commit: ' + ("fe814bcd08970381b1c76468f6bbc6fd0add470d\n").substr(0, 7) + ')');
 	})();
 
 /***/ }),
@@ -34001,6 +34001,7 @@
 	var LOCALSTORAGE_LOOP = 'aframeinspectormocaploopenabled';
 	var LOCALSTORAGE_SELECTED_RECORDING = 'aframeinspectorselectedrecording';
 	var COUNTDOWN = 5;
+	var SAMPLE_RECORDING = 'https://gist.githubusercontent.com/anonymous/9face967294fa7ed206f409add055927/raw/77dce282eb44536e839cfe93c16dd40acef7587b/%23leftHand%20+%20%23rightHand.json';
 
 	var scriptInjected = false;
 
@@ -34303,10 +34304,13 @@
 	    _this.addRecordingFromURL = function () {
 	      var self = _this;
 	      var url = prompt('Enter a URL of a recording to fetch');
+	      if (!url) {
+	        return;
+	      }
 	      var recordingName = prompt('Enter a name for the recording to store as');
 	      var xhr = new XMLHttpRequest();
 	      xhr.addEventListener('load', function () {
-	        self.recordingdb.addRecording(recordingName, JSON.parse(this.responseText));
+	        self.recordingdb.addRecording(recordingName || 'Recording #{self.state.recordingNames.length}', JSON.parse(this.responseText));
 	        self.refreshRecordingNames().then(function () {
 	          self.setState({ selectedRecordingName: recordingName });
 	        });
@@ -34409,6 +34413,8 @@
 	    value: function onScriptLoad() {
 	      var _this2 = this;
 
+	      var self = this;
+
 	      // Set components.
 	      sceneEl.setAttribute('avatar-recorder', {
 	        autoPlay: false
@@ -34418,11 +34424,27 @@
 	        cameraOverride: '[data-aframe-inspector-original-camera]',
 	        loop: JSON.parse(localStorage.getItem(LOCALSTORAGE_LOOP))
 	      });
+
 	      this.recordingdb = sceneEl.systems.recordingdb;
-	      this.refreshRecordingNames().then(function () {
+
+	      // Populate recording names, select from last session if any.
+	      this.refreshRecordingNames().then(function (recordingNames) {
 	        var selectedRecording = localStorage.getItem(LOCALSTORAGE_SELECTED_RECORDING);
-	        if (selectedRecording && _this2.state.recordingNames.indexOf(selectedRecording)) {
+	        if (selectedRecording && _this2.state.recordingNames.indexOf(selectedRecording) !== -1) {
 	          _this2.setState({ selectedRecordingName: selectedRecording });
+	        }
+
+	        // Add sample recording if empty.
+	        if (!recordingNames.length) {
+	          var xhr = new XMLHttpRequest();
+	          xhr.addEventListener('load', function () {
+	            self.recordingdb.addRecording('* Sample Recording', JSON.parse(this.responseText));
+	            self.refreshRecordingNames().then(function () {
+	              self.setState({ selectedRecordingName: '* Sample Recording' });
+	            });
+	          });
+	          xhr.open('GET', SAMPLE_RECORDING);
+	          xhr.send();
 	        }
 	      });
 	    }
@@ -34459,6 +34481,11 @@
 
 	  }, {
 	    key: 'refreshRecordingNames',
+
+
+	    /**
+	     * Update state.recordingNames, select recording if none selected.
+	     */
 	    value: function refreshRecordingNames() {
 	      var _this3 = this;
 
@@ -34577,6 +34604,22 @@
 	          'a',
 	          { href: state.uploadedRecordingURL, target: '_blank', ref: 'external', style: { color: '#FAFAFA', display: 'inline-block', marginLeft: '2px', marginTop: '10px', width: '85%', overflow: 'hidden' }, title: state.uploadedRecordingURL },
 	          state.uploadedRecordingURL
+	        ),
+	        state.selectedRecordingName === '* Sample Recording' && _react2.default.createElement(
+	          'p',
+	          { style: { fontSize: '10px', width: '200px' } },
+	          '* To get controllers to replay with the sample recording, give your controllers ',
+	          _react2.default.createElement(
+	            'code',
+	            null,
+	            'id="rightHand"'
+	          ),
+	          ' and ',
+	          _react2.default.createElement(
+	            'code',
+	            null,
+	            'id="leftHand"'
+	          )
 	        )
 	      );
 	    }
