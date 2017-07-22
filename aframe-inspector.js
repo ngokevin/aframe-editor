@@ -295,7 +295,7 @@
 	  window.addEventListener('inspector-loaded', function () {
 	    _reactDom2.default.render(_react2.default.createElement(Main, null), div);
 	  });
-	  console.log('A-Frame Inspector Version:', ("0.6.0"), '(' + ("22-07-2017") + ' Commit: ' + ("b98f6174f46de04c0cf35ed872c303dbb0b48264\n").substr(0, 7) + ')');
+	  console.log('A-Frame Inspector Version:', ("0.6.0"), '(' + ("22-07-2017") + ' Commit: ' + ("4bdd8113b770b0f03c490e5cfb030814c4f558bc\n").substr(0, 7) + ')');
 	})();
 
 /***/ }),
@@ -34031,13 +34031,16 @@
 	        cameraEl.getObject3D('replayermesh').visible = false;
 	      }
 
+	      // Enter VR.
 	      sceneEl.enterVR();
 
+	      // Start recording when a button is pressed.
 	      sceneEl.addEventListener('buttonup', function buttonStart() {
 	        self.countdownRecording();
 	        sceneEl.removeEventListener('buttonup', buttonStart);
 	      });
 
+	      // Stop recording when a button is pressed 5 times in a row quickly.
 	      var counter = 0;
 	      var lastButtonPressId = void 0;
 	      var lastButtonPressTime = void 0;
@@ -34046,23 +34049,23 @@
 	          return;
 	        }
 
-	        if (lastButtonPressTime) {
-	          if (lastButtonPressId === evt.detail.id && evt.timeStamp - lastButtonPressTime < 400) {
-	            counter++;
-	            lastButtonPressTime = evt.timeStamp;
-	          } else {
-	            counter = 0;
-	            lastButtonPressTime = undefined;
-	          }
+	        if (lastButtonPressTime && lastButtonPressId === evt.detail.id && evt.timeStamp - lastButtonPressTime < 500) {
+	          // Same button pressed
+	          counter++;
+	          lastButtonPressTime = evt.timeStamp;
 	        } else {
+	          // First button press or different button pressed.
+	          counter = 1;
 	          lastButtonPressId = evt.detail.id;
 	          lastButtonPressTime = evt.timeStamp;
 	        }
 
-	        if (counter === 5) {
+	        // Five presses reached. Stop recording.
+	        if (counter >= 5) {
 	          self.stopRecording();
 	        }
 
+	        // Remove this event listener when it's all done.
 	        Events.on('motioncapturerecordstop', function () {
 	          sceneEl.removeEventListener('buttonup', buttonsStop);
 	        });
@@ -34153,6 +34156,9 @@
 	          isRecording: false,
 	          recordingName: '',
 	          selectedRecordingName: _this.state.recordingName
+	        }, function () {
+	          // Re-enter Inspector. Do this after setting `isRecording` to false.
+	          Events.emit('inspectormodechanged', true);
 	        });
 	      });
 
