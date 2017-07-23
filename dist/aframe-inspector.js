@@ -295,7 +295,7 @@
 	  window.addEventListener('inspector-loaded', function () {
 	    _reactDom2.default.render(_react2.default.createElement(Main, null), div);
 	  });
-	  console.log('A-Frame Inspector Version:', ("0.6.0"), '(' + ("22-07-2017") + ' Commit: ' + ("fe814bcd08970381b1c76468f6bbc6fd0add470d\n").substr(0, 7) + ')');
+	  console.log('A-Frame Inspector Version:', ("0.6.0"), '(' + ("23-07-2017") + ' Commit: ' + ("1643a8e45e54d0fb96d4f7d3c7f67de61c6ae8c1\n").substr(0, 7) + ')');
 	})();
 
 /***/ }),
@@ -33998,12 +33998,13 @@
 
 
 	var SCRIPT = 'https://rawgit.com/ngokevin/aframe-motion-capture/mocapinspector/dist/aframe-motion-capture-components.min.js';
+	// const SCRIPT = 'http://localhost:8080/examples/js/build.js';
 	var LOCALSTORAGE_LOOP = 'aframeinspectormocaploopenabled';
 	var LOCALSTORAGE_SELECTED_RECORDING = 'aframeinspectorselectedrecording';
 	var COUNTDOWN = 5;
 	var SAMPLE_RECORDING = 'https://gist.githubusercontent.com/anonymous/9face967294fa7ed206f409add055927/raw/77dce282eb44536e839cfe93c16dd40acef7587b/%23leftHand%20+%20%23rightHand.json';
 
-	var scriptInjected = false;
+	var scriptInjected = 'avatar-recorder' in AFRAME.components;
 
 	var sceneEl = AFRAME.scenes[0];
 
@@ -34185,7 +34186,7 @@
 	    };
 
 	    _this.startReplaying = function () {
-	      if (_this.state.isRecording) {
+	      if (_this.state.isRecording || _this.state.isReplaying) {
 	        return;
 	      }
 
